@@ -107,24 +107,44 @@ namespace d9vr
 		{
 			return m_base->GetGammaRamp(iSwapChain, pRamp);
 		}
+
+// This is a hack for Source engine. It shouldn't cause any issues tho
+#define SIZE_METHOD
+
 		HRESULT WINAPI CreateTexture(UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle)
 		{
-			// VR Edited
 			HANDLE rtHandle = NULL;
-			HRESULT result = m_base->CreateTexture(Width, Height, Levels, Usage, Format, NextRTEye != Eyes::Invalid ? D3DPOOL_MANAGED : Pool, ppTexture, NextRTEye != Eyes::Invalid ? &rtHandle : pSharedHandle);
 
-			if (NextRTEye != Eyes::Invalid)
+			bool isVREye = false;
+#ifdef SIZE_METHOD
+			if (GetInternalInterface()->GetHMDCount() > 0)
 			{
-				if (rtHandle != 0 && !FAILED(result))
+				auto* pHMD = GetInternalInterface()->GetHMD(0);
+				d9vr::Size rtSize;
+				pHMD->GetEyeRTSize(&rtSize);
+
+				if (Width == rtSize.Data[0] && Height == rtSize.Data[1])
+					isVREye = true;
+			}
+#else
+			 isVREye = NextRTEye != Eyes::Invalid;
+#endif
+
+
+			HRESULT result = m_base->CreateTexture(Width, Height, Levels, Usage, Format, isVREye ? D3DPOOL_DEFAULT : Pool, ppTexture, isVREye ? &rtHandle : pSharedHandle);
+
+			if (isVREye)
+			{
+				if (rtHandle != NULL && !FAILED(result))
 				{
-					SetNextTextureForEye(NextRTEye, rtHandle);
+					SetNextTextureForEye(rtHandle);
 
 					if (pSharedHandle)
 						*pSharedHandle = rtHandle;
 				}
-			}
 
-			NextRTEye = Eyes::Invalid;
+				NextRTEye = Eyes::Invalid;
+			}
 
 			return result;
 		}

@@ -7,14 +7,14 @@
 
 namespace d9vr
 {
+	extern Eye NextRTEye;
+
 	class D9VRInterface_OpenVR;
 	D9VRInterface_OpenVR* CreateOpenVRInterface();
 
 	class BaseD9VRInterface : public ID9VRInterface
 	{
 	public:
-		void SetNextTextureForEye(Eye nEye) override;
-
 		void SetConversionCallback(MatrixConversionCallback MatrixConvert) override;
 
 		void SetLoggingCallback(LoggingCallback Logger) override;
@@ -50,7 +50,6 @@ namespace d9vr
 		memcpy(pOutMatrix, matPose, sizeof(Matrix));
 	}
 
-	extern Eye NextRTEye;
-
-	void SetNextTextureForEye(Eye nEye, HANDLE SharedResource);
+	void SubmitGeneral();
+	void SetNextTextureForEye(HANDLE SharedResource);
 }

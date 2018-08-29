@@ -80,17 +80,9 @@ namespace d9vr
 
 		void PollEvents()
 		{
-			float fSecondsSinceLastVsync;
-			m_pHMD->GetTimeSinceLastVsync(&fSecondsSinceLastVsync, NULL);
-
-			float fDisplayFrequency = m_pHMD->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
-			float fFrameDuration = 1.f / fDisplayFrequency;
-			float fVsyncToPhotons = m_pHMD->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
-
-			float fPredictedSecondsFromNow = 0.0f; //fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
-
 			vr::TrackedDevicePose_t poses[vr::k_unMaxTrackedDeviceCount];
-			m_pHMD->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding, fPredictedSecondsFromNow, poses, vr::k_unMaxTrackedDeviceCount);
+
+			vr::VRCompositor()->WaitGetPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 			uint32_t validPoses = 0;
 			for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++)
@@ -192,9 +184,12 @@ namespace d9vr
 
 		void Submit()
 		{
-			//vr::Texture_t EyeTexture[2];
-			//EyeTexture[0].handle
-			//vr::VRCompositor()->Submit()
+			SubmitGeneral();
+		}
+
+		void QueueTextureCreationForEye(Eye nEye)
+		{
+			NextRTEye = nEye;
 		}
 
 		vr::IVRSystem* m_pHMD;

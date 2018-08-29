@@ -4,11 +4,6 @@
 
 namespace d9vr
 {
-	void BaseD9VRInterface::SetNextTextureForEye(Eye nEye)
-	{
-		NextRTEye = nEye;
-	}
-
 	void BaseD9VRInterface::SetConversionCallback(MatrixConversionCallback MatrixConvert)
 	{
 		m_UserMatrixConv = MatrixConvert;

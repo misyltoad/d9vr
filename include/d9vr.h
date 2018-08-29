@@ -137,6 +137,10 @@ namespace d9vr
 		virtual void SetZRange(float zNear, float zFar) = 0;
 
 		virtual void GetMidToEyePose(Eye nEye, Matrix* pOutMatrix) = 0;
+
+		virtual void QueueTextureCreationForEye(Eye nEye) = 0;
+
+		virtual void Submit() = 0;
 	};
 
 	class ID9VRInterface
@@ -151,8 +155,6 @@ namespace d9vr
 		virtual void PollEvents() = 0;
 
 		virtual bool IsVR() = 0;
-
-		virtual void SetNextTextureForEye(Eye nEye) = 0;
 	};
 }
 
