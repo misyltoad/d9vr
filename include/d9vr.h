@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <list>
 
 namespace d9vr
 {
@@ -60,7 +61,9 @@ namespace d9vr
 	{
 		enum Backend : uint8_t
 		{
-			OpenVR
+			OpenVR,
+			Count,
+			Invalid = Count
 		};
 	}
 	using Backend = Backends::Backend;
@@ -83,20 +86,32 @@ namespace d9vr
 		{
 			Controller,
 			HMD,
-			Invalid,
 			GenericTracker,
-			TrackingReference
+			TrackingReference,
+			DisplayRedirect,
+			Count,
+			Invalid = Count
 		};
 	}
 	using DeviceClass = DeviceClasses::DeviceClass;
+
+	namespace Hands
+	{
+		enum Hand : uint8_t
+		{
+			Left,
+			Right,
+			Count,
+			Invalid = Count
+		};
+	}
+	using Hand = Hands::Hand;
 
 	struct Pose
 	{
 		Matrix PoseMatrix;
 		Vector Velocity;
 		Vector AngularVelocity;
-		DeviceClass Class;
-		//Quaternion Quaternion;
 
 		inline void GetPosition(Vector* pOutPos)
 		{
@@ -123,7 +138,23 @@ namespace d9vr
 		}
 	};
 
-	class ID9VRHMD
+	using DeviceId = uint32_t;
+
+	class IGenericDevice
+	{
+	public:
+		virtual DeviceClass GetClass() = 0;
+		virtual Pose* GetPose() = 0;
+		virtual DeviceId GetDeviceId() = 0;
+	};
+
+	class IController : public IGenericDevice
+	{
+	public:
+		const static DeviceClass Class = DeviceClasses::Controller;
+	};
+
+	class IHMD : public IGenericDevice
 	{
 	public:
 		virtual float GetIPD() = 0;
@@ -141,18 +172,24 @@ namespace d9vr
 		virtual void QueueTextureCreationForEye(Eye nEye) = 0;
 
 		virtual void Submit() = 0;
+
+		const static DeviceClass Class = DeviceClasses::HMD;
 	};
 
 	class ID9VRInterface
 	{
 	public:
-		virtual ID9VRHMD* GetHMD(uint32_t Index) = 0;
-		virtual uint32_t GetHMDCount() = 0;
+		virtual const std::list<IGenericDevice*>& GetDevices() = 0;
 
 		virtual void SetConversionCallback(MatrixConversionCallback MatrixConvert) = 0;
 		virtual void SetLoggingCallback(LoggingCallback Logger) = 0;
 
 		virtual void PollEvents() = 0;
+
+		virtual IGenericDevice* FindDevice(DeviceId Id) = 0;
+		virtual IHMD* GetPrimaryHMD() = 0;
+		virtual IHMD* GetHMD(uint32_t Index) = 0;
+		virtual IController* GetController(uint32_t Index) = 0;
 
 		virtual bool IsVR() = 0;
 	};

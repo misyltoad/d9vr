@@ -117,7 +117,7 @@ namespace d9vr
 
 			bool isVREye = false;
 #ifdef SIZE_METHOD
-			if (GetInternalInterface()->GetHMDCount() > 0)
+			if (GetInternalInterface()->GetHMD(0))
 			{
 				auto* pHMD = GetInternalInterface()->GetHMD(0);
 				d9vr::Size rtSize;

@@ -1,11 +1,11 @@
 #include "d9vr.h"
 #include "d9vr_interfaces.h"
 #include "openvr.h"
-#include <vector>
+#include <list>
 
 namespace d9vr
 {
-	inline vr::EVREye ConvertEye(Eye nEye)
+	inline vr::EVREye ConvertEyeToSteamVR(Eye nEye)
 	{
 		if (nEye == Eyes::Left)
 			return vr::Eye_Left;
@@ -13,16 +13,29 @@ namespace d9vr
 			return vr::Eye_Right;
 	}
 
-	class D9VRHMD_OpenVR : public ID9VRHMD
+	inline DeviceClass ConvertDeviceClassToD9VR(vr::ETrackedDeviceClass Class)
+	{
+		switch (Class)
+		{
+		default:
+		case vr::TrackedDeviceClass_Invalid: return DeviceClasses::Invalid;
+		case vr::TrackedDeviceClass_HMD: return DeviceClasses::HMD;
+		case vr::TrackedDeviceClass_Controller: return DeviceClasses::Controller;
+		case vr::TrackedDeviceClass_GenericTracker: return DeviceClasses::GenericTracker;
+		case vr::TrackedDeviceClass_TrackingReference: return DeviceClasses::TrackingReference;
+		case vr::TrackedDeviceClass_DisplayRedirect: return DeviceClasses::DisplayRedirect;
+		}
+	}
+
+	class D9VRHMD_OpenVR : public IHMD
 	{
 	public:
-		D9VRHMD_OpenVR(D9VRInterface_OpenVR* pParent, vr::IVRSystem* pHMD)
-			: m_Poses(vr::k_unMaxTrackedDeviceCount)
-			, m_pParent(pParent)
+		D9VRHMD_OpenVR(vr::IVRSystem* pHMD, DeviceId Id)
 		{
 			m_zNear = 0.1f;
 			m_zFar = 1024.0f;
 			m_pHMD = pHMD;
+			m_Id = Id;
 
 			UpdateIPD();
 
@@ -38,7 +51,7 @@ namespace d9vr
 
 		void GetMidEyePose(Matrix* pOutMatrix) override
 		{
-			*pOutMatrix = m_MidEyePose;
+			*pOutMatrix = m_Pose.PoseMatrix;
 		}
 
 		void GetEyeRTSize(Size* pOutSize) override
@@ -65,9 +78,8 @@ namespace d9vr
 
 		void GetMidToEyePose(Eye nEye, Matrix* pOutMatrix) override
 		{
-			vr::HmdMatrix34_t matrix = m_pHMD->GetEyeToHeadTransform(ConvertEye(nEye));
-			ConvertMatrix(&matrix, pOutMatrix);
-
+			vr::HmdMatrix34_t matrix = m_pHMD->GetEyeToHeadTransform(ConvertEyeToSteamVR(nEye));
+			ConvertFromSteamVRMatrix(&matrix, pOutMatrix);
 			GetInternalInterface()->ConvertMatrix(pOutMatrix);
 
 			// We should do this eventually.
@@ -75,60 +87,50 @@ namespace d9vr
 			//UserMatrixInv(pOutMatrix);
 		}
 
+		DeviceClass GetClass() override
+		{
+			return DeviceClass::HMD;
+		}
+
+		Pose* GetPose() override
+		{
+			return &m_Pose;
+		}
+
+		DeviceId GetDeviceId() override
+		{
+			return m_Id;
+		}
+
 	protected:
 		friend class D9VRInterface_OpenVR;
 
 		void PollEvents()
 		{
-			vr::TrackedDevicePose_t poses[vr::k_unMaxTrackedDeviceCount];
-
-			vr::VRCompositor()->WaitGetPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
-
-			uint32_t validPoses = 0;
-			for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++)
-			{
-				if (poses[i].bPoseIsValid)
-					validPoses++;
-			}
-			m_Poses.resize(validPoses);
-
-			for (uint32_t i = 0; i < validPoses; i++)
-			{
-				Matrix absTracking;
-				ConvertMatrix(&poses[i].mDeviceToAbsoluteTracking, &absTracking);
-
-				GetInternalInterface()->ConvertMatrix(&absTracking);
-
-				m_Poses[i].PoseMatrix = absTracking;
-
-				switch (m_pHMD->GetTrackedDeviceClass(i))
-				{
-					case vr::TrackedDeviceClass_Controller:        m_Poses[i].Class = DeviceClasses::Controller; break;
-					case vr::TrackedDeviceClass_HMD:
-					{
-						m_MidEyePose = absTracking;
-
-						m_Poses[i].Class = DeviceClasses::HMD; break;
-					}
-					case vr::TrackedDeviceClass_GenericTracker:    m_Poses[i].Class = DeviceClasses::GenericTracker; break;
-					case vr::TrackedDeviceClass_TrackingReference: m_Poses[i].Class = DeviceClasses::TrackingReference; break;
-					case vr::TrackedDeviceClass_Invalid:
-					default:                                       m_Poses[i].Class = DeviceClasses::Invalid; break;
-				}
-			}
-
 			auto leftProj = m_pHMD->GetProjectionMatrix(vr::Eye_Left, m_zNear, m_zFar);
 			auto rightProj = m_pHMD->GetProjectionMatrix(vr::Eye_Right, m_zNear, m_zFar);
-			ConvertMatrix(&leftProj, &m_LeftEyeProjection);
-			ConvertMatrix(&rightProj, &m_RightEyeProjection);
+			ConvertFromSteamVRMatrix(&leftProj, &m_LeftEyeProjection);
+			ConvertFromSteamVRMatrix(&rightProj, &m_RightEyeProjection);
 
 			vr::VREvent_t event;
 			while (m_pHMD->PollNextEvent(&event, sizeof(event)))
 				ProcessVREvent(event);
 
+			// New VR Input is a pain... Just gonna use this for now.
+			/*for (vr::TrackedDeviceIndex_t unDevice = 0; unDevice < vr::k_unMaxTrackedDeviceCount; unDevice++)
+			{
+				vr::VRControllerState_t state;
+				if (m_pHMD->GetControllerState(unDevice, &state, sizeof(state)))
+				{
+					state.rAxis
+				}
+			}*/
+
 			UpdateIPD();
 		}
+
 	private:
+
 		void ProcessVREvent(const vr::VREvent_t & event)
 		{
 			switch (event.eventType)
@@ -192,6 +194,10 @@ namespace d9vr
 			NextRTEye = nEye;
 		}
 
+		DeviceId m_Id;
+
+		Pose m_Pose;
+
 		vr::IVRSystem* m_pHMD;
 
 		std::string m_Driver;
@@ -200,24 +206,27 @@ namespace d9vr
 		Matrix m_LeftEyeProjection;
 		Matrix m_RightEyeProjection;
 
-		Matrix m_MidEyePose;
-
 		float m_zNear, m_zFar;
 
 		float m_IPD;
 
 		Size m_RenderSize;
-
-		std::vector<Pose> m_Poses;
-
-		D9VRInterface_OpenVR* m_pParent;
 	};
+
+	D9VRHMD_OpenVR* AsHMD(IGenericDevice* pDevice)
+	{
+		if (pDevice && pDevice->GetClass() == DeviceClasses::HMD)
+			return static_cast<D9VRHMD_OpenVR*>(pDevice);
+
+		return nullptr;
+	}
 
 	class D9VRInterface_OpenVR : public BaseD9VRInterface
 	{
 	public:
 		D9VRInterface_OpenVR()
 			: m_Initted{ false }
+			, m_pVRSystem{ nullptr }
 		{
 			TryInit();
 		}
@@ -242,38 +251,155 @@ namespace d9vr
 
 			m_Initted = true;
 
-			D9VRHMD_OpenVR* pHMDWrapper = new D9VRHMD_OpenVR(this, pHMD);
-			m_HMDs.push_back(pHMDWrapper);
+			m_pVRSystem = pHMD;
+
+			D9VRHMD_OpenVR* pHMDWrapper = new D9VRHMD_OpenVR(pHMD, 0);
+			m_Devices.push_back(pHMDWrapper);
 		}
 
 		bool IsVR() override
 		{
-			return !m_HMDs.empty() && m_Initted;
+			return m_Initted && !m_Devices.empty();
 		}
 
-		ID9VRHMD* GetHMD(uint32_t Index) override
+		const std::list<IGenericDevice*>& GetDevices() override
 		{
-			if (Index >= m_HMDs.size())
-				return nullptr;
-
-			return m_HMDs[Index];
-		}
-		uint32_t GetHMDCount() override
-		{
-			return m_HMDs.size();
+			return m_Devices;
 		}
 
 		void PollEvents() override
 		{
 			TryInit();
 
-			for (D9VRHMD_OpenVR* pHMD : m_HMDs)
-				pHMD->PollEvents();
+			if (!m_pVRSystem)
+				return;
+
+			vr::TrackedDevicePose_t SteamPoses[vr::k_unMaxTrackedDeviceCount];
+
+			vr::VRCompositor()->WaitGetPoses(SteamPoses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+
+			uint32_t ValidPoses = 0;
+			for (uint32_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++)
+			{
+				if (SteamPoses[i].bPoseIsValid)
+					ValidPoses++;
+			}
+
+
+			for (uint32_t i = 0; i < ValidPoses; i++)
+			{
+				DeviceClass Class = ConvertDeviceClassToD9VR(m_pVRSystem->GetTrackedDeviceClass(i));
+				IGenericDevice* pGenericDevice = FindOrCreateDevice(Class, i);
+
+				// Fix me to be nicer
+				D9VRHMD_OpenVR* pHMD = AsHMD(pGenericDevice);
+				if (pHMD)
+					ConvertSteamVRPose(&SteamPoses[i], &pHMD->m_Pose);
+			}
+
+			std::list<IGenericDevice*>::iterator iter;
+			for (iter = m_Devices.begin(); iter != m_Devices.end(); iter++)
+			{
+				D9VRHMD_OpenVR* pHMD = AsHMD(*iter);
+
+				if (pHMD)
+					pHMD->PollEvents();
+			}
+		}
+
+		IHMD* GetPrimaryHMD() override
+		{
+			return GetHMD(0);
+		}
+
+		IHMD* GetHMD(uint32_t Index) override
+		{
+			return static_cast<IHMD*>(FindDevice(DeviceClasses::HMD, Index));
+		}
+		IController* GetController(uint32_t Index) override
+		{
+			return static_cast<IController*>(FindDevice(DeviceClasses::Controller, Index));
+		}
+
+		IGenericDevice* FindDevice(DeviceId Id) override
+		{
+			std::list<IGenericDevice*>::iterator iter;
+			for (iter = m_Devices.begin(); iter != m_Devices.end(); iter++)
+			{
+				if ((*iter)->GetDeviceId() == Id)
+					return *iter;
+			}
+
+			return nullptr;
 		}
 	private:
+		IGenericDevice* FindDevice(DeviceClass Class, uint32_t Index)
+		{
+			uint32_t i = 0;
+			std::list<IGenericDevice*>::iterator iter;
+			for (iter = m_Devices.begin(); iter != m_Devices.end(); iter++)
+			{
+				if ((*iter)->GetClass() == Class)
+				{
+					i++;
+					if (Index + 1 == i)
+						return (*iter);
+				}
+			}
+
+			return nullptr;
+		}
+
+		IGenericDevice* CreateDevice(DeviceClass Class, DeviceId Id)
+		{
+			IGenericDevice* pDevice;
+			switch (Class)
+			{
+				case DeviceClasses::HMD: pDevice = new D9VRHMD_OpenVR(m_pVRSystem, Id);
+				//case DeviceClasses::Controller: m_Devices.push_back
+				//case DeviceClasses::GenericTracker: m_Devices.push_back
+				//case DeviceClasses::TrackingReference: m_Devices.push_back
+				default: pDevice = nullptr;
+			}
+
+			return pDevice;
+		}
+
+		void RemoveDevice(DeviceId Id)
+		{
+			std::list<IGenericDevice*>::iterator iter;
+			for (iter = m_Devices.begin(); iter != m_Devices.end();)
+			{
+				if ((*iter)->GetDeviceId() == Id)
+				{
+					delete *iter;
+					iter = m_Devices.erase(iter);
+				}
+				else
+					++iter;
+			}
+		}
+
+		IGenericDevice* FindOrCreateDevice(DeviceClass Class, DeviceId Id)
+		{
+			IGenericDevice* pFoundDevice = FindDevice(Id);
+
+			if (!pFoundDevice)
+				pFoundDevice = CreateDevice(Class, Id);
+
+			if (pFoundDevice->GetClass() != Class)
+			{
+				RemoveDevice(Id);
+				pFoundDevice = CreateDevice(Class, Id);
+			}
+
+			return pFoundDevice;
+		}
+
 		bool m_Initted;
 		vr::IVRRenderModels* m_pRenderModels;
-		std::vector<D9VRHMD_OpenVR*> m_HMDs;
+		vr::IVRSystem* m_pVRSystem;
+		std::list<IGenericDevice*> m_Devices;
 	};
 
 	D9VRInterface_OpenVR* CreateOpenVRInterface()

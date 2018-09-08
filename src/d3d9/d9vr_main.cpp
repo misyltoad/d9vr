@@ -25,6 +25,7 @@ extern "C" d9vr::ID9VRInterface* GetD9VRInterface()
 
 namespace d9vr
 {
+	// We should link this to hmd.
 	HANDLE EyeResources[2] = { 0, 0 };
 	ID3D11Texture2D* EyeTextures[2] = { nullptr, nullptr };
 
