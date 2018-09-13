@@ -1,5 +1,6 @@
 #include "d9vr.h"
 #include "d9vr_interfaces.h"
+#include "d9vr_openvr_util.h"
 #include "d3d11.h"
 
 d9vr::ID9VRInterface* D9VR = nullptr;

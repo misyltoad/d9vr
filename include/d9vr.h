@@ -39,6 +39,11 @@ namespace d9vr
 		}
 	};
 
+	struct Vector2
+	{
+		float Data[2];
+	};
+
 	struct Vector
 	{
 		float Data[3];
@@ -148,9 +153,38 @@ namespace d9vr
 		virtual DeviceId GetDeviceId() = 0;
 	};
 
+	using ControllerAxis = Vector2;
+
+	namespace Buttons
+	{
+		enum Button : uint32_t
+		{
+			System = 0,
+			Menu,
+			Grip,
+			Left,
+			Up,
+			Right,
+			Down,
+			A,
+			k_EButton_Axis0 = 32,
+			k_EButton_Axis1 = 33,
+			k_EButton_Axis2 = 34,
+			k_EButton_Axis3 = 35,
+			k_EButton_Axis4 = 36,
+
+			Count
+		};
+	}
+	using Button = Buttons::Button;
+
 	class IController : public IGenericDevice
 	{
 	public:
+		virtual bool GetAxis(uint32_t AxisIndex, ControllerAxis* pOutAxis) = 0;
+		virtual bool GetButton(Button ButtonIndex) = 0;
+		virtual Hand GetHand() = 0;
+
 		const static DeviceClass Class = DeviceClasses::Controller;
 	};
 
@@ -189,7 +223,8 @@ namespace d9vr
 		virtual IGenericDevice* FindDevice(DeviceId Id) = 0;
 		virtual IHMD* GetPrimaryHMD() = 0;
 		virtual IHMD* GetHMD(uint32_t Index) = 0;
-		virtual IController* GetController(uint32_t Index) = 0;
+		virtual IController* GetControllerByHand(Hand eHand) = 0;
+		virtual IController* GetControllerByIndex(uint32_t Index) = 0;
 
 		virtual bool IsVR() = 0;
 	};

@@ -130,6 +130,8 @@ namespace d9vr
 			 isVREye = NextRTEye != Eyes::Invalid;
 #endif
 
+			 if (Format != D3DFMT_A8R8G8B8)
+				 isVREye = false;
 
 			HRESULT result = m_base->CreateTexture(Width, Height, Levels, Usage, Format, isVREye ? D3DPOOL_DEFAULT : Pool, ppTexture, isVREye ? &rtHandle : pSharedHandle);
 
