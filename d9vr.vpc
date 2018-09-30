@@ -1,0 +1,57 @@
+//-----------------------------------------------------------------------------
+//	D9VR.VPC
+//
+//	
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR ".."
+$Macro OUTBINDIR "..\..\game\bin"
+$Macro BINNAME "d3d9"
+
+$Include "$SRCDIR\vpc_scripts\source_dll_base.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories	".\;$BASE;.\src;.\include;.\thirdparty\openvr\headers"
+		$TreatWarningsAsErrors				"No"
+	}
+
+	$General
+	{
+		$AdditionalProjectDependencies			"$BASE;"
+	}
+
+	$Linker
+	{
+		$IgnoreImportLibrary			"TRUE"
+		$AdditionalDependencies			"$BASE d3d11.lib"	[$WIN32]
+	}
+}
+
+$Project "d3d9"
+{
+	$Folder	"Source Files"
+	{
+		$File	"$SRCDIR\d9vr\include\d9vr.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d3d9_base.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d3d9_device.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d3d9_interface.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d3d9_main.cpp"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_base.cpp"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_interfaces.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_main.cpp"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr.cpp"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_controller.cpp"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_controller.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_hmd.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_hmd.cpp"
+		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_util.h"
+	}
+
+	$Folder	"Link Libraries"
+	{
+		$ImpLibexternal openvr_api
+	}
+}

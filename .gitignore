@@ -1,1 +1,7 @@
 build
+*.vcxproj
+*.filters
+*.vpc_crc
+*.sentinel
+Release
+Debug
