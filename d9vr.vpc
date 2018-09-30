@@ -16,6 +16,7 @@ $Configuration
 	{
 		$AdditionalIncludeDirectories	".\;$BASE;.\src;.\include;.\thirdparty\openvr\headers"
 		$TreatWarningsAsErrors				"No"
+		$PreprocessorDefinitions		"$BASE;D9VR_EXPORTS"
 	}
 
 	$General
@@ -48,6 +49,7 @@ $Project "d3d9"
 		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_hmd.h"
 		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_hmd.cpp"
 		$File	"$SRCDIR\d9vr\src\d3d9\d9vr_openvr_util.h"
+		$File	"$SRCDIR\d9vr\src\d3d9\d3d9.def"
 	}
 
 	$Folder	"Link Libraries"

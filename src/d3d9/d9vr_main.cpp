@@ -16,7 +16,7 @@ void CreateD9VR()
 	}
 }
 
-extern "C" d9vr::ID9VRInterface* GetD9VRInterface()
+D9VR_EXPORT d9vr::ID9VRInterface* GetD9VRInterface()
 {
 	if (!D9VR)
 		CreateD9VR();

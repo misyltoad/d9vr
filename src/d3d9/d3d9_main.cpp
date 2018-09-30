@@ -1,4 +1,5 @@
 #include "d3d9_interface.h"
+#include "d9vr.h"
 #include <string>
 
 HMODULE D3D9OriginalModule = 0;
@@ -20,7 +21,7 @@ void LoadD3DModule()
 typedef IDirect3D9* (WINAPI *Direct3DCreate9Proc)(UINT);
 typedef HRESULT (WINAPI *Direct3DCreate9ExProc)(UINT, IDirect3D9Ex**);
 
-IDirect3D9* WINAPI Direct3DCreate9(UINT nSDKVersion)
+D9VR_EXPORT IDirect3D9* WINAPI Direct3DCreate9(UINT nSDKVersion)
 {
 	LoadD3DModule();
 
@@ -32,7 +33,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT nSDKVersion)
 	return new d9vr::D3D9ProxyInterface(OriginalInterface);
 }
 
-HRESULT WINAPI Direct3DCreate9Ex(UINT nSDKVersion, IDirect3D9Ex **ppDirect3D9Ex)
+D9VR_EXPORT HRESULT WINAPI Direct3DCreate9Ex(UINT nSDKVersion, IDirect3D9Ex **ppDirect3D9Ex)
 {
 	LoadD3DModule();
 
@@ -53,34 +54,34 @@ HRESULT WINAPI Direct3DCreate9Ex(UINT nSDKVersion, IDirect3D9Ex **ppDirect3D9Ex)
 	return result;
 }
 
-int WINAPI D3DPERF_BeginEvent(D3DCOLOR col, LPCWSTR wszName)
+D9VR_EXPORT int WINAPI D3DPERF_BeginEvent(D3DCOLOR col, LPCWSTR wszName)
 {
 	return 0;
 }
 
-int WINAPI D3DPERF_EndEvent(void)
+D9VR_EXPORT int WINAPI D3DPERF_EndEvent(void)
 {
 	return 0;
 }
 
-void WINAPI D3DPERF_SetMarker(D3DCOLOR col, LPCWSTR wszName)
+D9VR_EXPORT void WINAPI D3DPERF_SetMarker(D3DCOLOR col, LPCWSTR wszName)
 {
 }
 
-void WINAPI D3DPERF_SetRegion(D3DCOLOR col, LPCWSTR wszName)
+D9VR_EXPORT void WINAPI D3DPERF_SetRegion(D3DCOLOR col, LPCWSTR wszName)
 {
 }
 
-BOOL WINAPI D3DPERF_QueryRepeatFrame(void)
+D9VR_EXPORT BOOL WINAPI D3DPERF_QueryRepeatFrame(void)
 {
 	return FALSE;
 }
 
-void WINAPI D3DPERF_SetOptions(DWORD dwOptions)
+D9VR_EXPORT void WINAPI D3DPERF_SetOptions(DWORD dwOptions)
 {
 }
 
-DWORD WINAPI D3DPERF_GetStatus(void)
+D9VR_EXPORT DWORD WINAPI D3DPERF_GetStatus(void)
 {
 	return 0;
 }

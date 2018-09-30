@@ -4,6 +4,12 @@
 #include <math.h>
 #include <list>
 
+#ifdef D9VR_EXPORTS
+#define D9VR_EXPORT extern "C" //__declspec(dllexport)
+#else
+#define D9VR_EXPORT extern "C" 
+#endif
+
 namespace d9vr
 {
 	struct Matrix
@@ -230,5 +236,5 @@ namespace d9vr
 	};
 }
 
-extern "C" d9vr::ID9VRInterface* GetD9VRInterface();
+D9VR_EXPORT d9vr::ID9VRInterface* GetD9VRInterface();
 typedef d9vr::ID9VRInterface*(*GetD9VRInterfaceProc)(void);
