@@ -27,6 +27,7 @@ $Configuration
 	$Linker
 	{
 		$IgnoreImportLibrary			"TRUE"
+		$ModuleDefinitionFile			"$SRCDIR\d9vr\src\d3d9\d3d9.def" [$WIN32]
 		$AdditionalDependencies			"$BASE d3d11.lib"	[$WIN32]
 	}
 }

@@ -5,9 +5,9 @@
 #include <list>
 
 #ifdef D9VR_EXPORTS
-#define D9VR_EXPORT extern "C" //__declspec(dllexport)
+#define D9VR_EXPORT
 #else
-#define D9VR_EXPORT extern "C" 
+#define D9VR_EXPORT
 #endif
 
 namespace d9vr
