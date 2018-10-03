@@ -86,7 +86,10 @@ namespace d9vr
 
 			vr::TrackedDevicePose_t SteamPoses[vr::k_unMaxTrackedDeviceCount];
 
-			vr::VRCompositor()->WaitGetPoses(SteamPoses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+			vr::EVRCompositorError eError = vr::VRCompositor()->WaitGetPoses(SteamPoses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+
+			if (eError != vr::VRCompositorError_None)
+				return;
 
 			for (uint32_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++)
 			{
