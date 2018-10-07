@@ -21,3 +21,8 @@ if (m_pD9VR)
 
 Then you can use m_pD9VR->whatever.
 It has a very similar interface to OpenVR (in fact, it wraps it but should hopefully be expandable.)
+
+## Notes
+
+Make your main framebuffer the size of the RT you want to allocate + 1.
+This will avoid you issues in the future.

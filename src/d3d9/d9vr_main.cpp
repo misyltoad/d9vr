@@ -33,7 +33,12 @@ namespace d9vr
 	void SetNextTextureForEye(HANDLE SharedResource)
 	{
 		if (EyeTextures[0])
+		{
 			EyeTextures[0]->Release();
+			EyeResources[0] = NULL;
+			EyeTextures[0] = nullptr;
+			Msg("Revoking eye texture!\n");
+		}
 
 		EyeTextures[0] = EyeTextures[1];
 		EyeResources[0] = EyeResources[1];
@@ -58,6 +63,20 @@ namespace d9vr
 	}
 
 	Eye NextRTEye = Eyes::Invalid;
+	
+	void CleanupGeneral()
+	{
+		if (EyeTextures[0])
+			EyeTextures[0]->Release();
+
+		if (EyeTextures[1])
+			EyeTextures[1]->Release();
+
+		EyeTextures[0] = nullptr;
+		EyeTextures[1] = nullptr;
+		EyeResources[0] = NULL;
+		EyeResources[1] = NULL;
+	}
 
 	void SubmitGeneral()
 	{

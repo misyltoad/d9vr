@@ -22,6 +22,8 @@ namespace d9vr
 		void SetZRange(float zNear, float zFar) override;
 
 		void GetMidToEyePose(Eye nEye, Matrix* pOutMatrix) override;
+		void QueueTextureCreationForEye(Eye nEye) override;
+		void CleanupEyeTextures() override;
 
 		DeviceClass GetClass() override;
 		Pose* GetPose() override;
@@ -39,7 +41,6 @@ namespace d9vr
 
 		void Submit();
 
-		void QueueTextureCreationForEye(Eye nEye);
 
 		DeviceId m_Id;
 		Pose m_Pose;

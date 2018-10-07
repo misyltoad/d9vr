@@ -210,6 +210,7 @@ namespace d9vr
 		virtual void GetMidToEyePose(Eye nEye, Matrix* pOutMatrix) = 0;
 
 		virtual void QueueTextureCreationForEye(Eye nEye) = 0;
+		virtual void CleanupEyeTextures() = 0;
 
 		virtual void Submit() = 0;
 

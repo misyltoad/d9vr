@@ -33,5 +33,6 @@ namespace d9vr
 	void Msg(const char* fmt, ...);
 
 	void SubmitGeneral();
+	void CleanupGeneral();
 	void SetNextTextureForEye(HANDLE SharedResource);
 }

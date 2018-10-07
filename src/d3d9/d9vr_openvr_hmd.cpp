@@ -130,4 +130,9 @@ namespace d9vr
 	{
 		NextRTEye = nEye;
 	}
+
+	void OpenVRHMD::CleanupEyeTextures()
+	{
+		CleanupGeneral();
+	}
 }
